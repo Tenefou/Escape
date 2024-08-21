@@ -1,5 +1,5 @@
 {
-    "name": "InputActions",
+    "name": "PlayerInputActions",
     "maps": [
         {
             "name": "Gameplay",
@@ -68,7 +68,7 @@
                 {
                     "name": "up",
                     "id": "16a186cb-1f0b-480d-8997-39c8a7777138",
-                    "path": "<Keyboard>/z",
+                    "path": "<Keyboard>/w",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -90,7 +90,7 @@
                 {
                     "name": "left",
                     "id": "5fb4a1f1-ff0a-4651-9b16-a6b47665e392",
-                    "path": "<Keyboard>/q",
+                    "path": "<Keyboard>/a",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
