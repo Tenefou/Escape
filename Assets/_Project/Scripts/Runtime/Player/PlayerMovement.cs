@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -10,6 +11,7 @@ public class PlayerMovement : MonoBehaviour
     PlayerInput input;
     InputAction moveAction;
     InputAction jumpAction;
+    InputAction crouchAction;
     Rigidbody rb;
 
     [SerializeField] private Transform cameraTransform; // Référence à la caméra
@@ -19,6 +21,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private Transform bottomCharacter;
     [SerializeField] private float groundCheckRadius;
+    [SerializeField] private CapsuleCollider collider;
 
 
     private void Start()
@@ -26,6 +29,7 @@ public class PlayerMovement : MonoBehaviour
         input = GetComponent<PlayerInput>();
         moveAction = input.actions.FindAction("Move");
         jumpAction = input.actions.FindAction("Jump");
+        crouchAction = input.actions.FindAction("Crouch");
         if (cameraTransform == null)
         {
             cameraTransform = Camera.main.transform;
@@ -68,18 +72,30 @@ public class PlayerMovement : MonoBehaviour
         rb.AddForce(Vector3.up * jumpHeigh, ForceMode.Impulse);
     }
 
-    private void FixedUpdate()
+    private void Update()
     {
         MovePlayer();
 
-        if(jumpAction.triggered && isGrounded)
+        isGrounded = Physics.CheckSphere(bottomCharacter.position, groundCheckRadius, groundLayer);
+        if (jumpAction.triggered && isGrounded)
         {
             Jump();
         }
+
+        Crouch();
     }
 
-    private void Update()
+    private void Crouch()
     {
-        isGrounded = Physics.CheckSphere(bottomCharacter.position, groundCheckRadius, groundLayer);
+        if (crouchAction.inProgress)
+        {
+            collider.height = 1.75f;
+            collider.center = new Vector3(collider.center.x, -0.125f);
+        }
+        else
+        {
+            collider.height = 2f;
+            collider.center = new Vector3(collider.center.x, 0);
+        }
     }
 }

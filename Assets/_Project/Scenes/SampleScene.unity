@@ -1225,7 +1225,7 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -1389,6 +1389,10 @@ PrefabInstance:
       propertyPath: speed
       value: 5
       objectReference: {fileID: 0}
+    - target: {fileID: 8287496673768303136, guid: fd1c7407a4b0a664ba18b0a0c76d7b5e, type: 3}
+      propertyPath: collider
+      value: 
+      objectReference: {fileID: 1727952165}
     - target: {fileID: 8287496673768303136, guid: fd1c7407a4b0a664ba18b0a0c76d7b5e, type: 3}
       propertyPath: jumpHeigh
       value: 3
