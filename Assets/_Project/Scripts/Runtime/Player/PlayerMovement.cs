@@ -97,6 +97,6 @@ public class PlayerMovement : MonoBehaviour
 
     private void Sprint()
     {
-        speed = sprintAction.inProgress? 7f : 5f;
+        speed = sprintAction.inProgress? speed * 2 : speed;
     }
 }
