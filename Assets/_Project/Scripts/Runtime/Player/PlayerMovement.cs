@@ -12,6 +12,7 @@ public class PlayerMovement : MonoBehaviour
     InputAction moveAction;
     InputAction jumpAction;
     InputAction crouchAction;
+    InputAction sprintAction;
     Rigidbody rb;
 
     [SerializeField] private Transform cameraTransform; // Référence à la caméra
@@ -30,6 +31,7 @@ public class PlayerMovement : MonoBehaviour
         moveAction = input.actions.FindAction("Move");
         jumpAction = input.actions.FindAction("Jump");
         crouchAction = input.actions.FindAction("Crouch");
+        sprintAction = input.actions.FindAction("Sprint");
         if (cameraTransform == null)
         {
             cameraTransform = Camera.main.transform;
@@ -87,15 +89,14 @@ public class PlayerMovement : MonoBehaviour
 
     private void Crouch()
     {
-        if (crouchAction.inProgress)
-        {
-            collider.height = 1.75f;
-            collider.center = new Vector3(collider.center.x, -0.125f);
-        }
-        else
-        {
-            collider.height = 2f;
-            collider.center = new Vector3(collider.center.x, 0);
-        }
+        collider.height = crouchAction.inProgress ? 1.75f : 2f;
+        collider.center = crouchAction.inProgress ? 
+            new Vector3(collider.center.x, -0.125f) : 
+            new Vector3(collider.center.x, 0);
+    }
+
+    private void Sprint()
+    {
+        speed = sprintAction.inProgress? 7f : 5f;
     }
 }
