@@ -7,7 +7,7 @@ public class InputManager : MonoBehaviour
     private PlayerInput _input;
     public static InputManager Instance { get; private set; }
 
-    // Actions de joueur
+    // Actions de joueur    
     private InputAction _moveAction;
     private InputAction _jumpAction;
     private InputAction _crouchAction;

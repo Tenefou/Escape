@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
@@ -9,14 +10,19 @@ using UnityEngine.InputSystem;
 public class PlayerMovement : MonoBehaviour
 {
     Rigidbody rb;
-    Vector3 playerMesh;
-    Vector3 camPosition;
 
-    [SerializeField] private float speed = 10.0f;
-    [SerializeField] private float jumpHeigh = 1.0f;
-    [SerializeField] private float characterHeight = 2f;
-    [SerializeField] private CapsuleCollider characterCollider;
-    [SerializeField] private Transform cameraPoint;
+    [Header("Values")]
+    Vector3 _playerColliderScale;
+    Vector3 _playerMeshPosition;
+    Vector3 _playerMeshScale;
+    Vector3 _camPosition;
+    bool _readyToJump;
+    float _moveSpeed;
+    float _playerHeight;
+
+
+    [Header("References")]
+    [SerializeField] private CapsuleCollider playerCollider;
     [SerializeField] private SpaceManager spaceManager;
     [SerializeField] private PlayerCamera playerCamera;
     [SerializeField] private GameObject playerPrefab;
@@ -24,22 +30,12 @@ public class PlayerMovement : MonoBehaviour
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
+        _playerMeshScale = playerPrefab.transform.localScale;
+        _playerMeshPosition = playerPrefab.transform.localPosition;
+        _playerColliderScale = playerCollider.transform.localScale;
+        _playerHeight = playerPrefab.transform.localScale.y;
+        _readyToJump = true;
     }
-
-    void MovePlayer()
-    {
-        Vector3 desiredMoveDirection = playerCamera.GetDirectionMove(InputManager.Instance.MoveAction);
-
-        // Déplacer le joueur
-        transform.position += desiredMoveDirection * speed * Time.deltaTime;
-    }
-
-    public void Jump()
-    {
-        if (InputManager.Instance.JumpAction.triggered && spaceManager.isGrounded)
-            rb.AddForce(Vector3.up * jumpHeigh, ForceMode.Impulse);
-    }
-
     private void Update()
     {
         MovePlayer();
@@ -48,40 +44,84 @@ public class PlayerMovement : MonoBehaviour
         Sprint();
     }
 
+    void MovePlayer()
+    {
+        Vector3 desiredMoveDirection = playerCamera.GetDirectionMove(InputManager.Instance.MoveAction);
+        Vector3 moveDirection;
+
+        if (spaceManager.isOnSlope && spaceManager.isGrounded)
+        {
+            // Obtenir la direction de mouvement projetée sur la pente
+            moveDirection = GetSlopeMoveDirection(desiredMoveDirection, spaceManager.slopeHit);
+
+            // Appliquer un ajustement à la gravité pour s'assurer que le joueur reste collé à la pente
+            // Permet de monter ou descendre la pente au lieu de glisser
+            rb.AddForce(-spaceManager.slopeHit.normal * 9.81f, ForceMode.Force);  // Augmente la gravité pour s'assurer qu'il colle à la pente
+
+        }
+        else
+        {
+            // Déplacer le joueur
+            moveDirection = desiredMoveDirection;
+
+            Debug.Log("Moving using the ground manager");
+
+        }
+        // Déplacer le joueur
+        transform.position += moveDirection * _moveSpeed * Time.deltaTime;
+    }
+
+    public void ResetJump()
+    {
+        _readyToJump = true;    
+    }
+
+    public void JumpAction()
+    {
+        _readyToJump = false;
+        if  (spaceManager.isOnSlope)
+            rb.AddForce(spaceManager.slopeHit.normal * 9.81f, ForceMode.Force);
+        rb.AddForce(Vector3.up * PlayerManager.Instance.JumpHeight, ForceMode.Impulse);
+    }
+
+    public void Jump()
+    {
+        if (InputManager.Instance.JumpAction.triggered && spaceManager.isGrounded && _readyToJump)
+            JumpAction();
+        else if(spaceManager.isGrounded && !_readyToJump)
+            Invoke(nameof(ResetJump), PlayerManager.Instance.JumpCooldown);
+    }
+
+
     private void Crouch()
     {
-        playerMesh = playerPrefab.transform.localScale;
-        camPosition = cameraPoint.position;
 
         if (InputManager.Instance.CrouchAction.inProgress) 
         
         {
-            characterCollider.height = 1f;
-            characterCollider.center = new Vector3(characterCollider.center.x, -0.5f);
-
-            playerMesh.y = 0.5f;
-
-            camPosition.y = 1f;
-            cameraPoint.position = camPosition;
-
-
+            transform.localScale = new Vector3(transform.localScale.x, PlayerManager.Instance.CrounchScale, transform.localScale.z);
+            rb.AddForce(Vector3.down * 3, ForceMode.Impulse);
         } else
         {
-            characterCollider.height = spaceManager.haveRoof ? 1f : characterHeight;
-            characterCollider.center = spaceManager.haveRoof ?
-                new Vector3(characterCollider.center.x, -0.5f) :
-                new Vector3(characterCollider.center.x, 0f);
-            
-
-            camPosition.y = spaceManager.haveRoof? 1f : characterHeight;
-            cameraPoint.position = camPosition;
+            transform.localScale = spaceManager.haveRoof ? 
+                new Vector3(transform.localScale.x, PlayerManager.Instance.CrounchScale, transform.localScale.z) : 
+                new Vector3(transform.localScale.x, _playerHeight, transform.localScale.z);
         }
-       
+
 
     }
 
     private void Sprint()
     {
-            speed = InputManager.Instance.SprintAction.inProgress? 8f: 5f;
+            _moveSpeed = InputManager.Instance.SprintAction.inProgress? PlayerManager.Instance.RunSpeed: PlayerManager.Instance.WalkSpeed;
+    }
+
+    private Vector3 GetSlopeMoveDirection(Vector3 moveDirection, RaycastHit _slopeHit)
+    {
+        // Projeter la direction du mouvement sur la pente
+        Vector3 slopeDirection = Vector3.ProjectOnPlane(moveDirection, _slopeHit.normal);
+
+        // Retourner la direction corrigée pour le déplacement
+        return slopeDirection;
     }
 }
