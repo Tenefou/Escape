@@ -25,7 +25,7 @@ public class SpaceManager : MonoBehaviour
     void Update()
     {
         isGrounded = Physics.CheckSphere(bottomCharacter.position, groundCheckRadius, groundLayer);
-        haveRoof = Physics.CheckSphere(topCharacterCrouch.position, groundCheckRadius * 3, groundLayer);
+        haveRoof = Physics.CheckSphere(topCharacterCrouch.position, groundCheckRadius, groundLayer);
         OnSlop();
     }
 
